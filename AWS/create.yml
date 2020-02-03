@@ -77,6 +77,13 @@
             | combine( { item.name: ((last_ami|default({}))[item.name] | default(item.image)) } ) }}
       loop: '{{ molecule_yml.platforms }}'
 
+    # Get AMI infos to find out root_device_name from AMI
+    # Further we'll use proper AMI's root_device_name during ec2 instance creation for root volume size customization
+    - name: Get image facts
+      ec2_ami_facts:
+        image_ids: '{{ ami_images.values() | list }}'
+      register: ami_facts
+
     - name: Create keypair
       ec2_key:
         name: '{{ keypair_name }}'
@@ -98,6 +105,13 @@
         instance_profile_name: '{{ item.profile_name | default(omit) }}'
         vpc_subnet_id: '{{ item.vpc_subnet_id }}'
         group: '{{ item.aws_sec_group | default(item.security_group_name) }}'
+        volumes:
+          - device_name: >- # specify root volume
+             {{ ami_facts.images | selectattr("image_id", "equalto", ami_images[item.name])
+                | map(attribute="root_device_name") | first }}
+            volume_type: gp2
+            volume_size: '{{ item.root_volume_size | default(8) }}'
+            delete_on_termination: true
         instance_tags:
           instance: '{{ item.name }}'
           Name: '{{ item.name }}-{{ ci_branch_name }}'
