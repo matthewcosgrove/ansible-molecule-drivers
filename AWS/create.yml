@@ -84,6 +84,27 @@
         image_ids: '{{ ami_images.values() | list }}'
       register: ami_facts
 
+    # We'll get info about AMI EBS volume: device_name, volume_size, volume_type...
+    # to use later during EC2 instance creation
+    - name: Set ami volume dict
+      set_fact:
+        ami_volume: >-
+          {{ ami_volume | default({})
+            | combine(
+              { item.name:
+                (
+                  ami_facts.images
+                  | selectattr("image_id", "equalto", item.image)
+                  | map(attribute="block_device_mappings")
+                  | first
+                  | selectattr("ebs", "defined")
+                  | first
+                )
+              }
+            )
+          }}
+        loop: '{{ molecule_yml.platforms }}'
+
     - name: Create keypair
       ec2_key:
         name: '{{ keypair_name }}'
@@ -106,11 +127,9 @@
         vpc_subnet_id: '{{ item.vpc_subnet_id }}'
         group: '{{ item.aws_sec_group | default(item.security_group_name) }}'
         volumes:
-          - device_name: >- # specify root volume
-             {{ ami_facts.images | selectattr("image_id", "equalto", ami_images[item.name])
-                | map(attribute="root_device_name") | first }}
-            volume_type: gp2
-            volume_size: '{{ item.root_volume_size | default(8) }}'
+          - device_name: '{{ ami_volume[item.name]["device_name"] }}' # original EBS root device name from AMI
+            volume_type: '{{ ami_volume[item.name]["ebs"]["volume_type"] }}' # original EBS root device type, ie "gp2"
+            volume_size: '{{ item.root_volume_size | default(ami_volume[item.name]["ebs"]["volume_size"]) }}' # custom
             delete_on_termination: true
         instance_tags:
           instance: '{{ item.name }}'
