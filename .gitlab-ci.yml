@@ -15,7 +15,7 @@ AWS role cookiecutter:
     AWS_REGION: us-east-1
   stage: deployment test
   script:
-    - cookiecutter -f --no-input https://github.com/lean-delivery/ansible-development-kit --checkout feature/customize-root-volume-size
+    - cookiecutter -f --no-input https://github.com/lean-delivery/ansible-development-kit --checkout feature/EPMLDI-1804-customize-volume-size-aws
     - mkdir -p ansible-role-default_role/molecule/resources/provisioning/
     - mv AWS ansible-role-default_role/molecule/resources/provisioning/
     - cd ansible-role-default_role
