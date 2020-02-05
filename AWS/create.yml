@@ -103,7 +103,7 @@
               }
             )
           }}
-        loop: '{{ molecule_yml.platforms }}'
+      loop: '{{ molecule_yml.platforms }}'
 
     - name: Create keypair
       ec2_key:
