@@ -130,8 +130,8 @@
           - device_name: '{{ ami_volume[item.name]["device_name"] }}' # original EBS root device name from AMI
             volume_type: '{{ ami_volume[item.name]["ebs"]["volume_type"] }}' # original EBS root device type, ie "gp2"
             volume_size: >-
-              {{ item.root_volume_size|int < ami_volume[item.name]["ebs"]["volume_size"]|int
-                | ternary(ami_volume[item.name]["ebs"]["volume_size"]|int, item.root_volume_size|int }}
+              {{ ((item.volume_size is defined) and (item.volume_size|int > ami_volume[item.name]["ebs"]["volume_size"]|int))
+                | ternary(item.volume_size|int, ami_volume[item.name]["ebs"]["volume_size"]|int) }}
             delete_on_termination: true
         instance_tags:
           instance: '{{ item.name }}'
