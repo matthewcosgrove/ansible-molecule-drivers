@@ -107,7 +107,7 @@
               }
             )
           }}
-      loop: '{{ ami_images }}'
+      loop: '{{ ami_images|dict2items }}'
 
     - name: Create keypair
       ec2_key:
