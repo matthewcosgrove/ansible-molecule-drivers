@@ -131,7 +131,7 @@
             volume_type: '{{ ami_volume[item.name]["ebs"]["volume_type"] }}' # original EBS root device type, ie "gp2"
             volume_size: >-
               {{ ((item.volume_size is defined) and (item.volume_size|int > ami_volume[item.name]["ebs"]["volume_size"]|int))
-                | ternary(item.volume_size|int, ami_volume[item.name]["ebs"]["volume_size"]|int) }}
+                | ternary((item.volume_size|default)|int, ami_volume[item.name]["ebs"]["volume_size"]|int) }}
             delete_on_termination: true
         instance_tags:
           instance: '{{ item.name }}'
